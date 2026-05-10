@@ -1,0 +1,16 @@
+[project]
+name = "generative-networks-deep-learning"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "ipywidgets>=8.1.8",
+    "jupyterlab>=4.5.7",
+    "matplotlib>=3.10.9",
+    "numpy>=2.0",
+    "pandas>=2.2",
+    "pillow>=10.0",
+    "scipy>=1.13",
+    "torch>=2.4",
+    "torchvision>=0.19",
+    "tqdm>=4.67",
+]
