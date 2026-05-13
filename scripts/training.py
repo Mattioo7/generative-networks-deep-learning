@@ -184,7 +184,7 @@ def train_vae(
             save_vae_samples(model, device, sample_dir / f"epoch_{epoch:03d}.png")
 
     elapsed = time.perf_counter() - start_time
-    stage(f"VAE training finished in {elapsed:.1f}s", enabled=train_fixed.verbose)
+    stage(f"VAE training finished in {int(elapsed // 3600):02d}:{int(elapsed % 3600 // 60):02d}:{int(elapsed % 60):02d}", enabled=train_fixed.verbose)
     return {
         "history": history,
         "elapsed_seconds": elapsed,
@@ -379,7 +379,7 @@ def train_gan(
             save_gan_samples(generator, device, sample_dir / f"epoch_{epoch:03d}.png")
 
     elapsed = time.perf_counter() - start_time
-    stage(f"GAN training finished in {elapsed:.1f}s", enabled=train_fixed.verbose)
+    stage(f"GAN training finished in {int(elapsed // 3600):02d}:{int(elapsed % 3600 // 60):02d}:{int(elapsed % 60):02d}", enabled=train_fixed.verbose)
     return {
         "history": history,
         "elapsed_seconds": elapsed,
@@ -534,7 +534,7 @@ def train_diffusion(
         ema.copy_to(model)
 
     elapsed = time.perf_counter() - start_time
-    stage(f"Diffusion training finished in {elapsed:.1f}s", enabled=train_fixed.verbose)
+    stage(f"Diffusion training finished in {int(elapsed // 3600):02d}:{int(elapsed % 3600 // 60):02d}:{int(elapsed % 60):02d}", enabled=train_fixed.verbose)
     return {
         "history": history,
         "elapsed_seconds": elapsed,
