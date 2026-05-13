@@ -308,5 +308,5 @@ def report_fid(
 ) -> None:
     if not enabled:
         return
-    suffix = f" (sampling took {elapsed_seconds:.1f}s)" if elapsed_seconds is not None else ""
+    suffix = f" (sampling took {int(elapsed_seconds // 3600):02d}:{int(elapsed_seconds % 3600 // 60):02d}:{int(elapsed_seconds % 60):02d})" if elapsed_seconds is not None else ""
     stage(f"FID: {fid:.3f}{suffix}", enabled=True)
