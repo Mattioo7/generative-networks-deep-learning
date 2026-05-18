@@ -32,7 +32,7 @@ class DataGridConfig:
 class TrainFixedConfig:
     device: Device = "auto"
     use_tqdm: bool = True
-    progress_backend: ProgressBackend = "auto"
+    progress_backend: ProgressBackend = "terminal"
     verbose: bool = True
     sample_grid_size: int = 64
     fid_real_samples: int = 1000

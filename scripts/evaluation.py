@@ -55,7 +55,7 @@ def inception_features(
     iterator = progress_bar(
         images_iter,
         enabled=use_tqdm,
-        backend="auto",
+        backend="terminal",
         description=description,
         leave=False,
     )
