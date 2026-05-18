@@ -65,6 +65,7 @@ from .outputs import (
     save_interpolation_grid,
     save_json,
     save_sample_grid,
+    update_total_stats,
 )
 from .progress import progress_bar, stage
 from .training import (
@@ -153,6 +154,7 @@ __all__ = [
     "save_sample_grid",
     "save_vae_samples",
     "stage",
+    "update_total_stats",
     "train_diffusion",
     "train_diffusion_one_epoch",
     "train_gan",

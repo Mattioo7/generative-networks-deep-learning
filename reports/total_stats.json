@@ -1,0 +1,46 @@
+{
+  "total_training_minutes": 193.6,
+  "total_runs": 5,
+  "runs": [
+    {
+      "run_dir": "vae_z128_b1_0_lr0_001_seed42_e30_bs64",
+      "experiment": "vae",
+      "kind": "vae",
+      "elapsed_seconds": 1705.7,
+      "device": "cuda",
+      "timestamp": "2026-05-12T19:19:39"
+    },
+    {
+      "run_dir": "vae_z128_b1_0_lr0_001_seed42_e50_bs64",
+      "experiment": "vae",
+      "kind": "vae",
+      "elapsed_seconds": 2676.0,
+      "device": "cuda",
+      "timestamp": "2026-05-12T20:34:26"
+    },
+    {
+      "run_dir": "vae_z128_b1_0_lr0_001_seed42_e50_bs64",
+      "experiment": "vae",
+      "kind": "vae",
+      "elapsed_seconds": 2167.0,
+      "device": "cuda",
+      "timestamp": "2026-05-12T21:04:31"
+    },
+    {
+      "run_dir": "gan_z128_g64_d64_lr0_0002_ls0_1_seed42_e80_bs128",
+      "experiment": "gan",
+      "kind": "gan",
+      "elapsed_seconds": 3594.9,
+      "device": "cuda",
+      "timestamp": "2026-05-13T18:13:13"
+    },
+    {
+      "run_dir": "diff_t400_cosine_c64_lr0_0002_seed42_e30_bs64",
+      "experiment": "diffusion",
+      "kind": "diffusion",
+      "elapsed_seconds": 1473.6,
+      "device": "cuda",
+      "timestamp": "2026-05-13T21:47:41"
+    }
+  ]
+}

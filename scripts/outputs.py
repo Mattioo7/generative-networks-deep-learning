@@ -104,3 +104,32 @@ def save_interpolation_grid(images: torch.Tensor, path: Path) -> None:
 
 def save_checkpoint(state: dict[str, Any], path: Path) -> None:
     torch.save(state, path)
+
+
+def update_total_stats(
+    output_root: str,
+    kind: str,
+    run_dir_name: str,
+    experiment: str,
+    elapsed_seconds: float,
+    device: str,
+) -> None:
+    stats_path = Path(output_root).parent / "total_stats.json"
+
+    if stats_path.exists():
+        data = json.loads(stats_path.read_text())
+    else:
+        data = {"total_training_minutes": 0.0, "total_runs": 0, "runs": []}
+
+    data["runs"].append({
+        "run_dir": run_dir_name,
+        "experiment": experiment,
+        "kind": kind,
+        "elapsed_seconds": elapsed_seconds,
+        "device": device,
+        "timestamp": datetime.now().isoformat(timespec="seconds"),
+    })
+    data["total_training_minutes"] = round(sum(r["elapsed_seconds"] for r in data["runs"]) / 60, 1)
+    data["total_runs"] = len(data["runs"])
+
+    stats_path.write_text(json.dumps(data, indent=2))
