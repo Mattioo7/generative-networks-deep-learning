@@ -2,3 +2,6 @@
 .venv/
 venv/
 data/
+/reports/runs/
+/.cache/
+/.claude/
