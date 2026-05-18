@@ -57,7 +57,7 @@ def inception_features(
         enabled=use_tqdm,
         backend="terminal",
         description=description,
-        leave=False,
+        leave=True,
     )
     for batch in iterator:
         batch = batch.to(device)
