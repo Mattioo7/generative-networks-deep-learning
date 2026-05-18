@@ -1,6 +1,6 @@
 {
-  "total_training_minutes": 194.4,
-  "total_runs": 7,
+  "total_training_minutes": 294.8,
+  "total_runs": 10,
   "runs": [
     {
       "run_dir": "vae_z128_b1_0_lr0_001_seed42_e30_bs64",
@@ -57,6 +57,30 @@
       "elapsed_seconds": 23.39891789999092,
       "device": "cuda",
       "timestamp": "2026-05-18T10:16:36"
+    },
+    {
+      "run_dir": "20260518_103616_vae_z256_b1_0_lr0_0003_e100",
+      "experiment": "vae",
+      "kind": "vae",
+      "elapsed_seconds": 2148.3351562999887,
+      "device": "cuda",
+      "timestamp": "2026-05-18T11:12:05"
+    },
+    {
+      "run_dir": "20260518_200555_vae_z256_b1_0_lr0_0003_e50",
+      "experiment": "vae",
+      "kind": "vae",
+      "elapsed_seconds": 1847.0850255000405,
+      "device": "cuda",
+      "timestamp": "2026-05-18T20:36:42"
+    },
+    {
+      "run_dir": "20260518_200541_vae_z256_b1_0_lr0_0003_e50",
+      "experiment": "vae",
+      "kind": "vae",
+      "elapsed_seconds": 2026.3708251999924,
+      "device": "cuda",
+      "timestamp": "2026-05-18T20:39:27"
     }
   ]
 }
