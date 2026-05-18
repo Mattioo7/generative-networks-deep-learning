@@ -37,6 +37,52 @@ def resolve_device(device: Device) -> torch.device:
     return torch.device(device)
 
 
+class EarlyStopping:
+    def __init__(self, patience: int, min_delta: float, restore_best: bool):
+        self.patience = patience
+        self.min_delta = min_delta
+        self.restore_best = restore_best
+        self.best: float | None = None
+        self.best_epoch: int | None = None
+        self.counter = 0
+        self.best_state: dict[str, torch.Tensor] | None = None
+
+    def step(self, metric: float, model: nn.Module, epoch: int) -> bool:
+        # Improvement must beat the previous best by at least min_delta — small
+        # noise-level changes do not reset the patience counter.
+        improved = self.best is None or metric < self.best - self.min_delta
+        if improved:
+            self.best = metric
+            self.best_epoch = epoch
+            self.counter = 0
+            if self.restore_best:
+                self.best_state = {
+                    name: tensor.detach().clone().cpu()
+                    for name, tensor in model.state_dict().items()
+                }
+        else:
+            self.counter += 1
+        return self.counter >= self.patience
+
+    def restore(self, model: nn.Module) -> None:
+        if self.best_state is None:
+            return
+        device = next(model.parameters()).device
+        model.load_state_dict(
+            {name: tensor.to(device) for name, tensor in self.best_state.items()}
+        )
+
+
+def _build_early_stopper(train_fixed: TrainFixedConfig) -> EarlyStopping | None:
+    if not train_fixed.early_stopping:
+        return None
+    return EarlyStopping(
+        patience=train_fixed.early_stopping_patience,
+        min_delta=train_fixed.early_stopping_min_delta,
+        restore_best=train_fixed.early_stopping_restore_best,
+    )
+
+
 # ---------------------------------------------------------------------------
 # VAE training
 # ---------------------------------------------------------------------------
@@ -147,6 +193,8 @@ def train_vae(
 
     history: list[dict[str, float]] = []
     sample_every = int(train_params["sample_every"]) if train_params["sample_every"] else 0
+    early_stopper = _build_early_stopper(train_fixed)
+    stopped_early = False
     start_time = time.perf_counter()
     epochs = progress_bar(
         range(1, train_params["epochs"] + 1),
@@ -183,12 +231,33 @@ def train_vae(
         if sample_dir is not None and sample_every and epoch % sample_every == 0:
             save_vae_samples(model, device, sample_dir / f"epoch_{epoch:03d}.png")
 
+        if early_stopper is not None and early_stopper.step(
+            validation_metrics["validation_loss"], model, epoch
+        ):
+            stopped_early = True
+            stage(
+                f"Early stopping at epoch {epoch}; best validation_loss="
+                f"{early_stopper.best:.4f} at epoch {early_stopper.best_epoch}.",
+                enabled=train_fixed.verbose,
+            )
+            break
+
+    if early_stopper is not None and early_stopper.restore_best:
+        early_stopper.restore(model)
+        if early_stopper.best_epoch is not None:
+            stage(
+                f"Restored best VAE weights from epoch {early_stopper.best_epoch}.",
+                enabled=train_fixed.verbose,
+            )
+
     elapsed = time.perf_counter() - start_time
     stage(f"VAE training finished in {int(elapsed // 3600):02d}:{int(elapsed % 3600 // 60):02d}:{int(elapsed % 60):02d}", enabled=train_fixed.verbose)
     return {
         "history": history,
         "elapsed_seconds": elapsed,
         "device": str(device),
+        "early_stopped": stopped_early,
+        "best_epoch": early_stopper.best_epoch if early_stopper is not None else None,
     }
 
 
@@ -504,6 +573,8 @@ def train_diffusion(
 
     history: list[dict[str, float]] = []
     sample_every = int(train_params["sample_every"]) if train_params["sample_every"] else 0
+    early_stopper = _build_early_stopper(train_fixed)
+    stopped_early = False
     start_time = time.perf_counter()
     epochs = progress_bar(
         range(1, train_params["epochs"] + 1),
@@ -530,7 +601,27 @@ def train_diffusion(
         if sample_dir is not None and sample_every and epoch % sample_every == 0:
             save_diffusion_samples(model, device, sample_dir / f"epoch_{epoch:03d}.png")
 
-    if ema is not None:
+        if early_stopper is not None and early_stopper.step(
+            validation_metrics["validation_loss"], model, epoch
+        ):
+            stopped_early = True
+            stage(
+                f"Early stopping at epoch {epoch}; best validation_loss="
+                f"{early_stopper.best:.4f} at epoch {early_stopper.best_epoch}.",
+                enabled=train_fixed.verbose,
+            )
+            break
+
+    # When restore_best is active, restoring validation-best model weights takes
+    # precedence over copying in the EMA shadow (which was never validated).
+    if early_stopper is not None and early_stopper.restore_best:
+        early_stopper.restore(model)
+        if early_stopper.best_epoch is not None:
+            stage(
+                f"Restored best diffusion weights from epoch {early_stopper.best_epoch}.",
+                enabled=train_fixed.verbose,
+            )
+    elif ema is not None:
         ema.copy_to(model)
 
     elapsed = time.perf_counter() - start_time
@@ -539,6 +630,8 @@ def train_diffusion(
         "history": history,
         "elapsed_seconds": elapsed,
         "device": str(device),
+        "early_stopped": stopped_early,
+        "best_epoch": early_stopper.best_epoch if early_stopper is not None else None,
     }
 
 

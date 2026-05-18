@@ -37,6 +37,10 @@ class TrainFixedConfig:
     sample_grid_size: int = 64
     fid_real_samples: int = 1000
     fid_fake_samples: int = 1000
+    early_stopping: bool = True
+    early_stopping_patience: int = 5
+    early_stopping_min_delta: float = 0.0
+    early_stopping_restore_best: bool = True
 
 
 @dataclass(frozen=True)
