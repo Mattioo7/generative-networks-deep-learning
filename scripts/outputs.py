@@ -1,5 +1,6 @@
 import json
 import re
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -18,24 +19,25 @@ def slugify(value: str) -> str:
 def run_name(kind: str, run: dict[str, Any]) -> str:
     model = run["model"]
     train = run["train"]
-    data = run["data"]
+
+    dt = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     if kind == "vae":
-        token = f"vae_z{model['latent_dim']}_b{model['beta']}_lr{model['learning_rate']}_seed{data['seed']}"
+        token = f"vae_z{model['latent_dim']}_b{model['beta']}_lr{model['learning_rate']}_e{train['epochs']}"
     elif kind == "gan":
         token = (
             f"gan_z{model['latent_dim']}_g{model['generator_features']}_d{model['discriminator_features']}"
-            f"_lr{model['learning_rate_g']}_ls{model['label_smoothing']}_seed{data['seed']}"
+            f"_lr{model['learning_rate_g']}_ls{model['label_smoothing']}_e{train['epochs']}"
         )
     elif kind == "diffusion":
         token = (
             f"diff_T{model['timesteps']}_{model['schedule']}_c{model['base_channels']}"
-            f"_lr{model['learning_rate']}_seed{data['seed']}"
+            f"_lr{model['learning_rate']}_e{train['epochs']}"
         )
     else:
         raise ValueError(f"Unknown kind: {kind}")
 
-    return slugify(f"{token}_e{train['epochs']}_bs{train['batch_size']}")
+    return f"{dt}_{slugify(token)}"
 
 
 def output_paths(experiment_name: str, output_root: str, run_dir_name: str) -> dict[str, Path]:
