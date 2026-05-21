@@ -6,3 +6,5 @@
 - zmienić sposób nazywania folderów z raportami
 - dodać więcej wykresów do raportów jeśli możliwe
 - dodać sumaryczny czas treningu?
+- a co z test setem?
+- zmniejszyć liczbę kolorów
