@@ -29,17 +29,32 @@ def build_train_transform(
     augment_flip: bool,
     grayscale: bool = False,
     posterize_bits: int | None = None,
+    resized_crop_scale: tuple[float, float] | None = None,
+    color_jitter: tuple[float, float, float] | None = None,
 ) -> transforms.Compose:
-    steps: list[object] = [
-        transforms.Resize(image_size),
-        transforms.CenterCrop(image_size),
-    ]
+    if resized_crop_scale is not None:
+        steps: list[object] = [
+            transforms.RandomResizedCrop(
+                image_size,
+                scale=resized_crop_scale,
+                ratio=(0.95, 1.05),
+                antialias=True,
+            ),
+        ]
+    else:
+        steps = [
+            transforms.Resize(image_size),
+            transforms.CenterCrop(image_size),
+        ]
     if grayscale:
         steps.append(transforms.Grayscale(num_output_channels=1))
     if posterize_bits is not None:
         steps.append(transforms.RandomPosterize(bits=posterize_bits, p=1.0))
     if augment_flip:
         steps.append(transforms.RandomHorizontalFlip(p=0.5))
+    if color_jitter is not None and not grayscale:
+        brightness, contrast, saturation = color_jitter
+        steps.append(transforms.ColorJitter(brightness=brightness, contrast=contrast, saturation=saturation))
     channels = 1 if grayscale else 3
     steps.extend(
         [
@@ -153,6 +168,8 @@ def prepare_data(
             augment_flip,
             grayscale=data_fixed.grayscale,
             posterize_bits=data_fixed.posterize_bits,
+            resized_crop_scale=data_fixed.resized_crop_scale,
+            color_jitter=data_fixed.color_jitter,
         ),
     )
     validation_dataset = CatDataset(

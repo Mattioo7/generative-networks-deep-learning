@@ -19,6 +19,13 @@ from .config import (
 # ---------------------------------------------------------------------------
 
 
+def _vae_norm(channels: int) -> nn.GroupNorm:
+    # GroupNorm is per-sample, so train/eval behave identically and decoder
+    # sampling is not coupled to batch composition. Matches modern image-gen
+    # convention (32 groups); falls back to channels if c < 32.
+    return nn.GroupNorm(num_groups=min(32, channels), num_channels=channels)
+
+
 class VAEEncoder(nn.Module):
     def __init__(self, channels: int, base_channels: int, hidden_dim: int, latent_dim: int, image_size: int):
         super().__init__()
@@ -27,13 +34,13 @@ class VAEEncoder(nn.Module):
             nn.Conv2d(channels, c1, kernel_size=4, stride=2, padding=1),
             nn.LeakyReLU(0.2, inplace=True),
             nn.Conv2d(c1, c2, kernel_size=4, stride=2, padding=1),
-            nn.BatchNorm2d(c2),
+            _vae_norm(c2),
             nn.LeakyReLU(0.2, inplace=True),
             nn.Conv2d(c2, c3, kernel_size=4, stride=2, padding=1),
-            nn.BatchNorm2d(c3),
+            _vae_norm(c3),
             nn.LeakyReLU(0.2, inplace=True),
             nn.Conv2d(c3, c4, kernel_size=4, stride=2, padding=1),
-            nn.BatchNorm2d(c4),
+            _vae_norm(c4),
             nn.LeakyReLU(0.2, inplace=True),
         )
         spatial = image_size // 16
@@ -69,13 +76,13 @@ class VAEDecoder(nn.Module):
         )
         self.deconv = nn.Sequential(
             nn.ConvTranspose2d(c4, c3, kernel_size=4, stride=2, padding=1),
-            nn.BatchNorm2d(c3),
+            _vae_norm(c3),
             nn.LeakyReLU(0.2, inplace=True),
             nn.ConvTranspose2d(c3, c2, kernel_size=4, stride=2, padding=1),
-            nn.BatchNorm2d(c2),
+            _vae_norm(c2),
             nn.LeakyReLU(0.2, inplace=True),
             nn.ConvTranspose2d(c2, c1, kernel_size=4, stride=2, padding=1),
-            nn.BatchNorm2d(c1),
+            _vae_norm(c1),
             nn.LeakyReLU(0.2, inplace=True),
             nn.ConvTranspose2d(c1, channels, kernel_size=4, stride=2, padding=1),
             nn.Tanh(),

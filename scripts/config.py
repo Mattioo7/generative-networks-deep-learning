@@ -20,6 +20,8 @@ class DataFixedConfig:
     posterize_bits: int | None = None
     pin_memory: bool = False
     num_workers: int = 0
+    resized_crop_scale: tuple[float, float] | None = None
+    color_jitter: tuple[float, float, float] | None = None
 
 
 @dataclass(frozen=True)
@@ -64,6 +66,10 @@ class VAEGridConfig:
     beta: float | list[float] = 1.0
     learning_rate: float | list[float] = 1e-3
     weight_decay: float | list[float] = 0.0
+    # Linearly ramp β from 0 to `beta` over the first N epochs (0 disables).
+    # Computed from the absolute epoch number, so resumed runs continue at the
+    # correct annealed value without persisting extra state.
+    kl_anneal_epochs: int | list[int] = 0
 
 
 @dataclass(frozen=True)
@@ -71,6 +77,10 @@ class GANFixedConfig:
     spectral_norm: bool = True
     mode_collapse_window: int = 50
     mode_collapse_min_std: float = 1e-3
+    amp: bool = False
+    ema_decay: float = 0.0
+    lr_warmup_steps: int = 0
+    lr_cosine_decay: bool = False
 
 
 @dataclass(frozen=True)
