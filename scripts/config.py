@@ -58,6 +58,7 @@ class TrainGridConfig:
 class VAEFixedConfig:
     base_channels: int = 32
     hidden_dim: int = 512
+    amp: bool = False  # mixed-precision training on CUDA (fp16 forward/backward)
 
 
 @dataclass(frozen=True)

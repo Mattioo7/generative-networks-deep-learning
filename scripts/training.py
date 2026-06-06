@@ -11,7 +11,7 @@ import torch.nn.functional as F
 from torch import nn
 from torch.utils.data import DataLoader
 
-from .config import Device, GANFixedConfig, TrainFixedConfig
+from .config import Device, GANFixedConfig, TrainFixedConfig, VAEFixedConfig
 from .models import DiffusionModel, Discriminator, Generator, VAE, count_parameters
 from .outputs import save_checkpoint, save_sample_grid
 from .progress import progress_bar, stage
@@ -117,27 +117,47 @@ def vae_loss(
     }
 
 
+def _amp_autocast(device: torch.device, enabled: bool) -> Callable[[], Any]:
+    if enabled and device.type == "cuda":
+        return lambda: torch.amp.autocast(device_type="cuda", dtype=torch.float16)
+    return nullcontext
+
+
 def train_vae_one_epoch(
     model: VAE,
     loader: DataLoader,
     optimizer: torch.optim.Optimizer,
     device: torch.device,
     beta: float,
+    scaler: "torch.amp.GradScaler | None" = None,
 ) -> dict[str, float]:
     model.train()
     total_loss = 0.0
     total_recon = 0.0
     total_kl = 0.0
     total_examples = 0
+    amp_enabled = scaler is not None
+    autocast_ctx = _amp_autocast(device, amp_enabled)
 
     for batch in loader:
-        batch = batch.to(device)
-        optimizer.zero_grad()
-        reconstruction, mu, logvar = model(batch)
-        losses = vae_loss(reconstruction, batch, mu, logvar, beta)
-        losses["loss"].backward()
-        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-        optimizer.step()
+        batch = batch.to(device, non_blocking=True)
+        optimizer.zero_grad(set_to_none=True)
+        with autocast_ctx():
+            reconstruction, mu, logvar = model(batch)
+            losses = vae_loss(reconstruction, batch, mu, logvar, beta)
+
+        if amp_enabled:
+            scaler.scale(losses["loss"]).backward()
+            # Unscale before clipping so max_norm applies to the real gradient
+            # magnitudes, not the loss-scaler-inflated ones.
+            scaler.unscale_(optimizer)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+            scaler.step(optimizer)
+            scaler.update()
+        else:
+            losses["loss"].backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+            optimizer.step()
 
         examples = batch.size(0)
         total_loss += losses["loss"].item() * examples
@@ -158,17 +178,20 @@ def evaluate_vae(
     loader: DataLoader,
     device: torch.device,
     beta: float,
+    amp_enabled: bool = False,
 ) -> dict[str, float]:
     model.eval()
     total_loss = 0.0
     total_recon = 0.0
     total_kl = 0.0
     total_examples = 0
+    autocast_ctx = _amp_autocast(device, amp_enabled)
 
     for batch in loader:
-        batch = batch.to(device)
-        reconstruction, mu, logvar = model(batch)
-        losses = vae_loss(reconstruction, batch, mu, logvar, beta)
+        batch = batch.to(device, non_blocking=True)
+        with autocast_ctx():
+            reconstruction, mu, logvar = model(batch)
+            losses = vae_loss(reconstruction, batch, mu, logvar, beta)
         examples = batch.size(0)
         total_loss += losses["loss"].item() * examples
         total_recon += losses["reconstruction"].item() * examples
@@ -189,6 +212,7 @@ def train_vae(
     model_params: dict[str, Any],
     train_params: dict[str, Any],
     train_fixed: TrainFixedConfig,
+    fixed_params: VAEFixedConfig | None = None,
     sample_dir: Path | None = None,
     checkpoint_path: Path | None = None,
     resume_from: Path | str | None = None,
@@ -205,6 +229,15 @@ def train_vae(
         lr=model_params["learning_rate"],
         weight_decay=model_params["weight_decay"],
     )
+
+    amp_enabled = (
+        fixed_params is not None
+        and fixed_params.amp
+        and device.type == "cuda"
+    )
+    scaler = torch.amp.GradScaler("cuda") if amp_enabled else None
+    if amp_enabled:
+        stage("AMP enabled (fp16 autocast + GradScaler).", enabled=train_fixed.verbose)
 
     history: list[dict[str, float]] = []
     start_epoch = 0
@@ -243,12 +276,14 @@ def train_vae(
             optimizer,
             device,
             beta=beta_now,
+            scaler=scaler,
         )
         validation_metrics = evaluate_vae(
             model,
             validation_loader,
             device,
             beta=beta_now,
+            amp_enabled=amp_enabled,
         )
         row = {"epoch": epoch, "beta": beta_now, **train_metrics, **validation_metrics}
         history.append(row)
