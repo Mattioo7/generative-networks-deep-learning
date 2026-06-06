@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 
 from .config import Device, GANFixedConfig, TrainFixedConfig
 from .models import DiffusionModel, Discriminator, Generator, VAE, count_parameters
-from .outputs import save_sample_grid
+from .outputs import save_checkpoint, save_sample_grid
 from .progress import progress_bar, stage
 
 
@@ -177,6 +177,8 @@ def train_vae(
     train_params: dict[str, Any],
     train_fixed: TrainFixedConfig,
     sample_dir: Path | None = None,
+    checkpoint_path: Path | None = None,
+    resume_from: Path | str | None = None,
 ) -> dict[str, Any]:
     device = resolve_device(train_fixed.device)
     stage(f"Using device: {device}", enabled=train_fixed.verbose)
@@ -192,12 +194,25 @@ def train_vae(
     )
 
     history: list[dict[str, float]] = []
+    start_epoch = 0
+    if resume_from is not None:
+        ckpt = torch.load(Path(resume_from), map_location=device)
+        model.load_state_dict(ckpt["model_state_dict"])
+        optimizer.load_state_dict(ckpt["optimizer_state_dict"])
+        start_epoch = int(ckpt["epoch"])
+        history = list(ckpt.get("history", []))
+        stage(
+            f"Resumed VAE from {resume_from} at epoch {start_epoch}.",
+            enabled=train_fixed.verbose,
+        )
+
     sample_every = int(train_params["sample_every"]) if train_params["sample_every"] else 0
     early_stopper = _build_early_stopper(train_fixed)
     stopped_early = False
+    last_epoch = start_epoch
     start_time = time.perf_counter()
     epochs = progress_bar(
-        range(1, train_params["epochs"] + 1),
+        range(start_epoch + 1, train_params["epochs"] + 1),
         enabled=train_fixed.use_tqdm,
         backend=train_fixed.progress_backend,
         description="VAE Training",
@@ -205,6 +220,7 @@ def train_vae(
     )
 
     for epoch in epochs:
+        last_epoch = epoch
         train_metrics = train_vae_one_epoch(
             model,
             train_loader,
@@ -249,6 +265,22 @@ def train_vae(
                 f"Restored best VAE weights from epoch {early_stopper.best_epoch}.",
                 enabled=train_fixed.verbose,
             )
+
+    if checkpoint_path is not None:
+        checkpoint_path = Path(checkpoint_path)
+        checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+        save_checkpoint(
+            {
+                "epoch": last_epoch,
+                "model_state_dict": model.state_dict(),
+                "optimizer_state_dict": optimizer.state_dict(),
+                "history": history,
+                "model_params": model_params,
+                "train_params": train_params,
+            },
+            checkpoint_path,
+        )
+        stage(f"Saved VAE checkpoint to {checkpoint_path}.", enabled=train_fixed.verbose)
 
     elapsed = time.perf_counter() - start_time
     stage(f"VAE training finished in {int(elapsed // 3600):02d}:{int(elapsed % 3600 // 60):02d}:{int(elapsed % 60):02d}", enabled=train_fixed.verbose)
@@ -375,6 +407,8 @@ def train_gan(
     train_fixed: TrainFixedConfig,
     fixed_params: GANFixedConfig,
     sample_dir: Path | None = None,
+    checkpoint_path: Path | None = None,
+    resume_from: Path | str | None = None,
 ) -> dict[str, Any]:
     device = resolve_device(train_fixed.device)
     stage(f"Using device: {device}", enabled=train_fixed.verbose)
@@ -400,6 +434,21 @@ def train_gan(
     history: list[dict[str, float]] = []
     discriminator_loss_buffer: list[float] = []
     collapse_alerts: list[dict[str, int]] = []
+    start_epoch = 0
+    if resume_from is not None:
+        ckpt = torch.load(Path(resume_from), map_location=device)
+        generator.load_state_dict(ckpt["generator_state_dict"])
+        discriminator.load_state_dict(ckpt["discriminator_state_dict"])
+        optimizer_g.load_state_dict(ckpt["optimizer_g_state_dict"])
+        optimizer_d.load_state_dict(ckpt["optimizer_d_state_dict"])
+        start_epoch = int(ckpt["epoch"])
+        history = list(ckpt.get("history", []))
+        discriminator_loss_buffer = list(ckpt.get("discriminator_loss_buffer", []))
+        collapse_alerts = list(ckpt.get("collapse_alerts", []))
+        stage(
+            f"Resumed GAN from {resume_from} at epoch {start_epoch}.",
+            enabled=train_fixed.verbose,
+        )
 
     def on_collapse(batch_index: int) -> None:
         collapse_alerts.append({"epoch": int(epoch), "batch": int(batch_index)})
@@ -410,9 +459,10 @@ def train_gan(
         )
 
     sample_every = int(train_params["sample_every"]) if train_params["sample_every"] else 0
+    last_epoch = start_epoch
     start_time = time.perf_counter()
     epochs = progress_bar(
-        range(1, train_params["epochs"] + 1),
+        range(start_epoch + 1, train_params["epochs"] + 1),
         enabled=train_fixed.use_tqdm,
         backend=train_fixed.progress_backend,
         description="GAN Training",
@@ -420,6 +470,7 @@ def train_gan(
     )
 
     for epoch in epochs:
+        last_epoch = epoch
         metrics = train_gan_one_epoch(
             generator,
             discriminator,
@@ -446,6 +497,26 @@ def train_gan(
 
         if sample_dir is not None and sample_every and epoch % sample_every == 0:
             save_gan_samples(generator, device, sample_dir / f"epoch_{epoch:03d}.png")
+
+    if checkpoint_path is not None:
+        checkpoint_path = Path(checkpoint_path)
+        checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+        save_checkpoint(
+            {
+                "epoch": last_epoch,
+                "generator_state_dict": generator.state_dict(),
+                "discriminator_state_dict": discriminator.state_dict(),
+                "optimizer_g_state_dict": optimizer_g.state_dict(),
+                "optimizer_d_state_dict": optimizer_d.state_dict(),
+                "history": history,
+                "collapse_alerts": collapse_alerts,
+                "discriminator_loss_buffer": discriminator_loss_buffer,
+                "model_params": model_params,
+                "train_params": train_params,
+            },
+            checkpoint_path,
+        )
+        stage(f"Saved GAN checkpoint to {checkpoint_path}.", enabled=train_fixed.verbose)
 
     elapsed = time.perf_counter() - start_time
     stage(f"GAN training finished in {int(elapsed // 3600):02d}:{int(elapsed % 3600 // 60):02d}:{int(elapsed % 60):02d}", enabled=train_fixed.verbose)
@@ -559,6 +630,8 @@ def train_diffusion(
     train_params: dict[str, Any],
     train_fixed: TrainFixedConfig,
     sample_dir: Path | None = None,
+    checkpoint_path: Path | None = None,
+    resume_from: Path | str | None = None,
 ) -> dict[str, Any]:
     device = resolve_device(train_fixed.device)
     stage(f"Using device: {device}", enabled=train_fixed.verbose)
@@ -572,12 +645,30 @@ def train_diffusion(
     ema = EMA(model, decay=ema_decay) if ema_decay > 0 else None
 
     history: list[dict[str, float]] = []
+    start_epoch = 0
+    if resume_from is not None:
+        ckpt = torch.load(Path(resume_from), map_location=device)
+        model.load_state_dict(ckpt["model_state_dict"])
+        optimizer.load_state_dict(ckpt["optimizer_state_dict"])
+        start_epoch = int(ckpt["epoch"])
+        history = list(ckpt.get("history", []))
+        if ema is not None and ckpt.get("ema_shadow") is not None:
+            ema.shadow = {
+                name: tensor.to(device)
+                for name, tensor in ckpt["ema_shadow"].items()
+            }
+        stage(
+            f"Resumed diffusion from {resume_from} at epoch {start_epoch}.",
+            enabled=train_fixed.verbose,
+        )
+
     sample_every = int(train_params["sample_every"]) if train_params["sample_every"] else 0
     early_stopper = _build_early_stopper(train_fixed)
     stopped_early = False
+    last_epoch = start_epoch
     start_time = time.perf_counter()
     epochs = progress_bar(
-        range(1, train_params["epochs"] + 1),
+        range(start_epoch + 1, train_params["epochs"] + 1),
         enabled=train_fixed.use_tqdm,
         backend=train_fixed.progress_backend,
         description="Diffusion Training",
@@ -585,6 +676,7 @@ def train_diffusion(
     )
 
     for epoch in epochs:
+        last_epoch = epoch
         train_metrics = train_diffusion_one_epoch(
             model, train_loader, optimizer, device, ema,
         )
@@ -623,6 +715,27 @@ def train_diffusion(
             )
     elif ema is not None:
         ema.copy_to(model)
+
+    if checkpoint_path is not None:
+        checkpoint_path = Path(checkpoint_path)
+        checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+        save_checkpoint(
+            {
+                "epoch": last_epoch,
+                "model_state_dict": model.state_dict(),
+                "optimizer_state_dict": optimizer.state_dict(),
+                "ema_shadow": (
+                    {name: tensor.detach().cpu().clone() for name, tensor in ema.shadow.items()}
+                    if ema is not None
+                    else None
+                ),
+                "history": history,
+                "model_params": model_params,
+                "train_params": train_params,
+            },
+            checkpoint_path,
+        )
+        stage(f"Saved diffusion checkpoint to {checkpoint_path}.", enabled=train_fixed.verbose)
 
     elapsed = time.perf_counter() - start_time
     stage(f"Diffusion training finished in {int(elapsed // 3600):02d}:{int(elapsed % 3600 // 60):02d}:{int(elapsed % 60):02d}", enabled=train_fixed.verbose)
