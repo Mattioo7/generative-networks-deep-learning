@@ -4,6 +4,5 @@
   - jak pierwszy ma VAE Training: 100%|██████████| 30/30 [28:24<00:00, 56.83s/it, kl=40.924, loss=229.454, val=230.565]
   - pewnie bo image size
 - dodać więcej wykresów do raportów jeśli możliwe
-- dodać sumaryczny czas treningu?
 - a co z test setem?
 - zmniejszyć liczbę kolorów

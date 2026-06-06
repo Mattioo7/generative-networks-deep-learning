@@ -24,31 +24,53 @@ def list_image_files(root: Path) -> list[Path]:
     return files
 
 
-def build_train_transform(image_size: int, augment_flip: bool) -> transforms.Compose:
+def build_train_transform(
+    image_size: int,
+    augment_flip: bool,
+    grayscale: bool = False,
+    posterize_bits: int | None = None,
+) -> transforms.Compose:
     steps: list[object] = [
         transforms.Resize(image_size),
         transforms.CenterCrop(image_size),
     ]
+    if grayscale:
+        steps.append(transforms.Grayscale(num_output_channels=1))
+    if posterize_bits is not None:
+        steps.append(transforms.RandomPosterize(bits=posterize_bits, p=1.0))
     if augment_flip:
         steps.append(transforms.RandomHorizontalFlip(p=0.5))
+    channels = 1 if grayscale else 3
     steps.extend(
         [
             transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+            transforms.Normalize((0.5,) * channels, (0.5,) * channels),
         ]
     )
     return transforms.Compose(steps)
 
 
-def build_eval_transform(image_size: int) -> transforms.Compose:
-    return transforms.Compose(
+def build_eval_transform(
+    image_size: int,
+    grayscale: bool = False,
+    posterize_bits: int | None = None,
+) -> transforms.Compose:
+    steps: list[object] = [
+        transforms.Resize(image_size),
+        transforms.CenterCrop(image_size),
+    ]
+    if grayscale:
+        steps.append(transforms.Grayscale(num_output_channels=1))
+    if posterize_bits is not None:
+        steps.append(transforms.RandomPosterize(bits=posterize_bits, p=1.0))
+    channels = 1 if grayscale else 3
+    steps.extend(
         [
-            transforms.Resize(image_size),
-            transforms.CenterCrop(image_size),
             transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+            transforms.Normalize((0.5,) * channels, (0.5,) * channels),
         ]
     )
+    return transforms.Compose(steps)
 
 
 class CatDataset(Dataset):
@@ -126,11 +148,20 @@ def prepare_data(
 
     train_dataset = CatDataset(
         train_files,
-        build_train_transform(data_fixed.image_size, augment_flip),
+        build_train_transform(
+            data_fixed.image_size,
+            augment_flip,
+            grayscale=data_fixed.grayscale,
+            posterize_bits=data_fixed.posterize_bits,
+        ),
     )
     validation_dataset = CatDataset(
         validation_files,
-        build_eval_transform(data_fixed.image_size),
+        build_eval_transform(
+            data_fixed.image_size,
+            grayscale=data_fixed.grayscale,
+            posterize_bits=data_fixed.posterize_bits,
+        ),
     )
 
     return PreparedData(
@@ -179,7 +210,14 @@ def real_image_loader(
     generator = torch.Generator().manual_seed(seed)
     permutation = torch.randperm(len(files), generator=generator).tolist()
     selected = [files[i] for i in permutation[:num_samples]]
-    dataset = CatDataset(selected, build_eval_transform(data_fixed.image_size))
+    dataset = CatDataset(
+        selected,
+        build_eval_transform(
+            data_fixed.image_size,
+            grayscale=data_fixed.grayscale,
+            posterize_bits=data_fixed.posterize_bits,
+        ),
+    )
     return DataLoader(
         dataset,
         batch_size=batch_size,

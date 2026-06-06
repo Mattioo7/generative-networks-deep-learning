@@ -16,6 +16,8 @@ class DataFixedConfig:
     output_dir: str = "reports/runs"
     image_size: int = 64
     channels: int = 3
+    grayscale: bool = False
+    posterize_bits: int | None = None
     pin_memory: bool = False
     num_workers: int = 0
 
