@@ -1,6 +1,6 @@
 {
-  "total_training_minutes": 899.4,
-  "total_runs": 42,
+  "total_training_minutes": 901.6,
+  "total_runs": 43,
   "runs": [
     {
       "run_dir": "vae_z128_b1_0_lr0_001_seed42_e30_bs64",
@@ -337,6 +337,14 @@
       "elapsed_seconds": 539.1119185000425,
       "device": "cuda",
       "timestamp": "2026-06-13T20:14:19"
+    },
+    {
+      "run_dir": "20260613_212907_vae_z128_b0_8_lr0_0005_e50",
+      "experiment": "vae",
+      "kind": "vae",
+      "elapsed_seconds": 132.3184634000063,
+      "device": "cuda",
+      "timestamp": "2026-06-13T21:31:20"
     }
   ]
 }

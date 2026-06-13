@@ -8,6 +8,8 @@
 - zmniejszyć liczbę kolorów
 
 
+# NOWE TODO:
+- dla na najlepszych hiperparametrów dodać jeszcze jakiś szake czy lekkie przesunięcia, aby mieć jeszcze więcej danych
 
 
 # Do raportu:
