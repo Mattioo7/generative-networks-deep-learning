@@ -1,6 +1,6 @@
 {
-  "total_training_minutes": 776.2,
-  "total_runs": 29,
+  "total_training_minutes": 899.4,
+  "total_runs": 42,
   "runs": [
     {
       "run_dir": "vae_z128_b1_0_lr0_001_seed42_e30_bs64",
@@ -233,6 +233,110 @@
       "elapsed_seconds": 649.0247827999992,
       "device": "cuda",
       "timestamp": "2026-06-07T13:49:13"
+    },
+    {
+      "run_dir": "20260607_143446_gan_z128_g64_d64_lr0_0001_ls0_1_e40",
+      "experiment": "gan",
+      "kind": "gan",
+      "elapsed_seconds": 1167.014327500001,
+      "device": "cuda",
+      "timestamp": "2026-06-07T14:54:14"
+    },
+    {
+      "run_dir": "20260613_182541_vae_z64_b0_5_lr0_0005_e40",
+      "experiment": "vae",
+      "kind": "vae",
+      "elapsed_seconds": 559.6075285000261,
+      "device": "cuda",
+      "timestamp": "2026-06-13T18:35:01"
+    },
+    {
+      "run_dir": "20260613_183522_vae_z64_b0_5_lr0_001_e40",
+      "experiment": "vae",
+      "kind": "vae",
+      "elapsed_seconds": 506.9535802999744,
+      "device": "cuda",
+      "timestamp": "2026-06-13T18:43:50"
+    },
+    {
+      "run_dir": "20260613_184413_vae_z64_b0_8_lr0_0005_e40",
+      "experiment": "vae",
+      "kind": "vae",
+      "elapsed_seconds": 497.34651489998214,
+      "device": "cuda",
+      "timestamp": "2026-06-13T18:52:30"
+    },
+    {
+      "run_dir": "20260613_185301_vae_z64_b0_8_lr0_001_e40",
+      "experiment": "vae",
+      "kind": "vae",
+      "elapsed_seconds": 483.9815920999972,
+      "device": "cuda",
+      "timestamp": "2026-06-13T19:01:06"
+    },
+    {
+      "run_dir": "20260613_190126_vae_z128_b0_5_lr0_0005_e40",
+      "experiment": "vae",
+      "kind": "vae",
+      "elapsed_seconds": 488.2407231000252,
+      "device": "cuda",
+      "timestamp": "2026-06-13T19:09:34"
+    },
+    {
+      "run_dir": "20260613_190954_vae_z128_b0_5_lr0_001_e40",
+      "experiment": "vae",
+      "kind": "vae",
+      "elapsed_seconds": 492.2122349999845,
+      "device": "cuda",
+      "timestamp": "2026-06-13T19:18:07"
+    },
+    {
+      "run_dir": "20260613_191853_vae_z128_b0_8_lr0_0005_e40",
+      "experiment": "vae",
+      "kind": "vae",
+      "elapsed_seconds": 513.4992636999814,
+      "device": "cuda",
+      "timestamp": "2026-06-13T19:27:26"
+    },
+    {
+      "run_dir": "20260613_192748_vae_z128_b0_8_lr0_001_e40",
+      "experiment": "vae",
+      "kind": "vae",
+      "elapsed_seconds": 512.4282939000987,
+      "device": "cuda",
+      "timestamp": "2026-06-13T19:36:20"
+    },
+    {
+      "run_dir": "20260613_193647_vae_z256_b0_5_lr0_0005_e40",
+      "experiment": "vae",
+      "kind": "vae",
+      "elapsed_seconds": 531.8733601000858,
+      "device": "cuda",
+      "timestamp": "2026-06-13T19:45:39"
+    },
+    {
+      "run_dir": "20260613_194602_vae_z256_b0_5_lr0_001_e40",
+      "experiment": "vae",
+      "kind": "vae",
+      "elapsed_seconds": 545.6596742999973,
+      "device": "cuda",
+      "timestamp": "2026-06-13T19:55:08"
+    },
+    {
+      "run_dir": "20260613_195535_vae_z256_b0_8_lr0_0005_e40",
+      "experiment": "vae",
+      "kind": "vae",
+      "elapsed_seconds": 554.2427792999661,
+      "device": "cuda",
+      "timestamp": "2026-06-13T20:04:49"
+    },
+    {
+      "run_dir": "20260613_200519_vae_z256_b0_8_lr0_001_e40",
+      "experiment": "vae",
+      "kind": "vae",
+      "elapsed_seconds": 539.1119185000425,
+      "device": "cuda",
+      "timestamp": "2026-06-13T20:14:19"
     }
   ]
 }

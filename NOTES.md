@@ -6,3 +6,20 @@
 - dodać więcej wykresów do raportów jeśli możliwe
 - a co z test setem?
 - zmniejszyć liczbę kolorów
+
+
+
+
+# Do raportu:
+- najpierw dać claudowi, aby przeszedł przez raporty wszystkich eksperymentów, które już przeprowadziłem i wyciągnął wnioski nt wpływu hiperparametrów
+- potem rozpisać notebook, który puści testy grida hiperparametrów; zastanowić się których; ile wgl trwały testy na nowym datasecie? chyba ktrótko
+- opisać dataset 1 vs dataset 2, jak poszło z pierwszym, przykłady prób, do jakich wniosków doszliśmy, próby redukcji kolorów, zmiana datasetu, rezultaty na nowym datasecie (w sekcji dataset tylko wspomniany, że został użyty i napisać, że więcej o nim w sekcji x...)
+- czyli opisać to jako eksperyment redukcji kolorów? czy eksperyment zmiany datasetu?
+- w jakiej sekcji (background?) opisać problem mode colapse i gdzieś tam napisać, że nie wystąpił u nas
+- jak opisuję rezultaty to posłużyć się zarówno FID jak i oceną subiektywną
+- eksperyment z intormpolacją
+
+# Inne notatki do raportu
+- dodać opis jak uruchomić testy
+- może opis parametrów interfejsu mojego?
+- wypisać wersje bibliotek, albo napisać, że są one w pliku toml
