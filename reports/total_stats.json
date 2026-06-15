@@ -1,6 +1,6 @@
 {
-  "total_training_minutes": 1238.7,
-  "total_runs": 61,
+  "total_training_minutes": 1316.0,
+  "total_runs": 62,
   "runs": [
     {
       "run_dir": "vae_z128_b1_0_lr0_001_seed42_e30_bs64",
@@ -489,6 +489,14 @@
       "elapsed_seconds": 9491.21278790012,
       "device": "cuda",
       "timestamp": "2026-06-15T03:11:15"
+    },
+    {
+      "run_dir": "20260615_112330_diff_t400_cosine_c64_lr0_0002_e100",
+      "experiment": "diffusion",
+      "kind": "diffusion",
+      "elapsed_seconds": 4638.784775000066,
+      "device": "cuda",
+      "timestamp": "2026-06-15T12:40:50"
     }
   ]
 }
