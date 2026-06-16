@@ -438,6 +438,7 @@ def train_gan_one_epoch(
                 _apply_lr(optimizer_d, base_lr_d, factor)
 
         # Discriminator updates.
+        generator.eval()
         for _ in range(n_disc_steps):
             optimizer_d.zero_grad(set_to_none=True)
             noise = torch.randn(batch_size, generator.latent_dim, 1, 1, device=device)
@@ -459,6 +460,7 @@ def train_gan_one_epoch(
         discriminator_loss_buffer.append(d_loss.item())
 
         # Generator update.
+        generator.train()
         optimizer_g.zero_grad(set_to_none=True)
         noise = torch.randn(batch_size, generator.latent_dim, 1, 1, device=device)
         with autocast_ctx():
