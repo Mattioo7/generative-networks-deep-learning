@@ -1,0 +1,26 @@
+{
+  "experiment": "gan",
+  "kind": "gan",
+  "data": {
+    "train_fraction": 0.95,
+    "validation_fraction": 0.05,
+    "augment_flip": true,
+    "seed": 42
+  },
+  "train": {
+    "epochs": 50,
+    "batch_size": 128,
+    "sample_every": 10
+  },
+  "model": {
+    "latent_dim": 128,
+    "generator_features": 64,
+    "discriminator_features": 64,
+    "learning_rate_g": 0.0001,
+    "learning_rate_d": 0.0004,
+    "label_smoothing": 0.1,
+    "n_disc_steps": 1,
+    "beta1": 0.5,
+    "beta2": 0.999
+  }
+}

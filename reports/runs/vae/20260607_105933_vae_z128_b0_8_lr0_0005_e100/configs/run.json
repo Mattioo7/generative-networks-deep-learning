@@ -1,0 +1,22 @@
+{
+  "experiment": "vae",
+  "kind": "vae",
+  "data": {
+    "train_fraction": 0.9,
+    "validation_fraction": 0.1,
+    "augment_flip": false,
+    "seed": 42
+  },
+  "train": {
+    "epochs": 100,
+    "batch_size": 64,
+    "sample_every": 10
+  },
+  "model": {
+    "latent_dim": 128,
+    "beta": 0.8,
+    "learning_rate": 0.0005,
+    "weight_decay": 1e-06,
+    "kl_anneal_epochs": 20
+  }
+}

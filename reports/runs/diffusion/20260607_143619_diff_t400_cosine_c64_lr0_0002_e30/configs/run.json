@@ -1,0 +1,30 @@
+{
+  "experiment": "diffusion",
+  "kind": "diffusion",
+  "data": {
+    "train_fraction": 0.95,
+    "validation_fraction": 0.05,
+    "augment_flip": false,
+    "seed": 42
+  },
+  "train": {
+    "epochs": 30,
+    "batch_size": 64,
+    "sample_every": 10
+  },
+  "model": {
+    "timesteps": 400,
+    "schedule": "cosine",
+    "base_channels": 64,
+    "channel_mults": [
+      1,
+      2,
+      2,
+      2
+    ],
+    "learning_rate": 0.0002,
+    "beta_start": 0.0001,
+    "beta_end": 0.02,
+    "ema_decay": 0.999
+  }
+}

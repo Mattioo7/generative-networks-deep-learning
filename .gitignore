@@ -2,6 +2,8 @@
 .venv/
 venv/
 data/
-/reports/runs/
+reports/runs/*/*/checkpoints/
+reports/runs/*/*/figures/
+reports/runs/*/*/samples/
 /.cache/
 /.claude/
